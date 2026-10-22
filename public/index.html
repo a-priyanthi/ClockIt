@@ -1993,14 +1993,18 @@ async function checkLiveVerification() {
   if (!res || !res.found) {
     box.className = 'note pink';
     if (icon) icon.textContent = '⛔';
-    text.innerHTML = `Roll number "<b>${esc(rollNo)}</b>" not found in official MIT student registries across all 8 departments.`;
+    if (res && res.error) {
+      text.innerHTML = `Verification notice: ${esc(res.error)}`;
+    } else {
+      text.innerHTML = `Roll number "<b>${esc(rollNo)}</b>" not found in official MIT student registries across all 8 departments.`;
+    }
     return;
   }
 
   const s = res.student;
   const semSelect = $('#loginStudentSemester');
   if (semSelect) {
-    semSelect.value = String(s.semester || '1');
+    semSelect.value = String(s.semester || '3');
   }
 
   const deptSelect = $('#loginStudentDept');

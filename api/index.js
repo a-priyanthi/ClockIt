@@ -14,24 +14,44 @@ function ensureInitialized() {
       seedAcademicClock();
       seedAllMitStudentsSync();
       seedAllMitCurriculaSync();
-      isInitialized = true;
     } catch (err) {
-      console.error('Vercel serverless database initialization error:', err);
-      throw err;
+      console.warn('Vercel serverless database initialization notice:', err.message);
     }
+    isInitialized = true;
+  }
+}
+
+function normalizeRequestUrl(req) {
+  let targetPath = null;
+
+  // 1. Check if rewrite added ?path=... or &path=...
+  if (req.url && (req.url.includes('path=') || req.url.includes('?path='))) {
+    try {
+      const u = new URL(req.url, 'http://localhost');
+      targetPath = u.searchParams.get('path');
+      u.searchParams.delete('path');
+      const cleanSearch = u.search ? u.search : '';
+      if (targetPath) {
+        req.url = '/api/' + targetPath.replace(/^\//, '') + cleanSearch;
+        req.originalUrl = req.url;
+        return;
+      }
+    } catch (e) {}
+  }
+
+  // 2. Check Vercel routing headers
+  const orig = req.headers['x-matched-path'] || req.headers['x-forwarded-uri'] || req.headers['x-original-url'] || req.headers['x-vercel-matched-path'];
+  if (orig && orig !== '/api' && orig !== '/api/' && orig !== '/api/index.js' && orig.startsWith('/api/')) {
+    const qIdx = req.url.indexOf('?');
+    const qPart = (qIdx !== -1 && !orig.includes('?')) ? req.url.slice(qIdx) : '';
+    req.url = orig + qPart;
+    req.originalUrl = req.url;
   }
 }
 
 // Export serverless handler for Vercel
 module.exports = (req, res) => {
   ensureInitialized();
-
-  // Restore original request path if modified by Vercel internal rewrites
-  const orig = req.headers['x-matched-path'] || req.headers['x-forwarded-uri'] || req.headers['x-original-url'];
-  if (orig && (req.url === '/api' || req.url === '/api/index.js' || req.url === '/' || req.url === '/api/index' || req.url.startsWith('/api/index.js?') || req.url.startsWith('/api?'))) {
-    const qIdx = req.url.indexOf('?');
-    req.url = (qIdx !== -1 && !orig.includes('?')) ? orig + req.url.slice(qIdx) : orig;
-  }
-
+  normalizeRequestUrl(req);
   return app(req, res);
 };

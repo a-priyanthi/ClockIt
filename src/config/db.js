@@ -1,24 +1,27 @@
-let DatabaseSync;
-try {
-  ({ DatabaseSync } = require('node:sqlite'));
-} catch (err) {
-  throw new Error(
-    `Failed to load built-in 'node:sqlite'. Your current Node.js version is ${process.version}. ` +
-    `node:sqlite requires Node.js >= 22.5.0. On Vercel, please set Node.js Version to '22.x' in Project Settings > General.`
-  );
-}
 const fs = require('fs');
 const path = require('path');
 const config = require('./index');
+const { createFallbackDatabase } = require('./sqliteFallback');
 
-// Ensure database directory exists
-const dbDir = path.dirname(config.DB_PATH);
-if (!fs.existsSync(dbDir)) {
-  fs.mkdirSync(dbDir, { recursive: true });
+let db = null;
+
+// Attempt to use built-in node:sqlite if available and supported
+try {
+  const { DatabaseSync } = require('node:sqlite');
+  const dbDir = path.dirname(config.DB_PATH);
+  if (!fs.existsSync(dbDir)) {
+    fs.mkdirSync(dbDir, { recursive: true });
+  }
+  db = new DatabaseSync(config.DB_PATH);
+  console.log(`[Database] Initialized with native node:sqlite (${config.DB_PATH})`);
+} catch (err) {
+  console.warn(`[Database] Native node:sqlite not available (${err.message}). Activating resilient embedded database engine.`);
+  const fallbackStoragePath = path.join(
+    path.dirname(config.DB_PATH),
+    'clockit_data.json'
+  );
+  db = createFallbackDatabase(fallbackStoragePath);
 }
-
-// Instantiate SQLite synchronous database
-const db = new DatabaseSync(config.DB_PATH);
 
 /**
  * Initialize all database tables and indexes

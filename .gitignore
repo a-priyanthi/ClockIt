@@ -4,6 +4,7 @@ node_modules/
 # SQLite Database
 *.db
 *.db-journal
+clockit_data.json
 
 # Uploads directory
 uploads/*
