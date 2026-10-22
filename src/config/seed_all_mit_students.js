@@ -24,7 +24,7 @@ function fetchDepartmentHtml(url) {
   });
 }
 
-function seedAllMitStudents() {
+async function seedAllMitStudents() {
   console.log('[MIT Roster] Initializing official_mit_students database table...');
   db.exec(`
     CREATE TABLE IF NOT EXISTS official_mit_students (
@@ -72,7 +72,7 @@ function seedAllMitStudents() {
   for (const dept of DEPARTMENTS) {
     try {
       console.log(`[MIT Roster] Fetching ${dept.name} students from ${dept.url}...`);
-      const html = fetchDepartmentHtml(dept.url);
+      const html = await fetchDepartmentHtml(dept.url);
       const regex = /students-item\s+(filter-[a-z]+)[\s\S]*?<h5>(.*?)<\/h5>[\s\S]*?<h6>(\d+)<\/h6>[\s\S]*?<p>(.*?)<\/p>/g;
       let m;
       let count = 0;
@@ -111,12 +111,13 @@ function seedAllMitStudents() {
 module.exports = { seedAllMitStudents };
 
 if (require.main === module) {
-  try {
-    const total = seedAllMitStudents();
-    console.log('Seeded total:', total);
-    process.exit(0);
-  } catch (err) {
-    console.error(err);
-    process.exit(1);
-  }
+  seedAllMitStudents()
+    .then(total => {
+      console.log('Seeded total:', total);
+      process.exit(0);
+    })
+    .catch(err => {
+      console.error(err);
+      process.exit(1);
+    });
 }
