@@ -24,8 +24,7 @@ function fetchDepartmentHtml(url) {
   });
 }
 
-async function seedAllMitStudents() {
-  console.log('[MIT Roster] Initializing official_mit_students database table...');
+function seedAllMitStudentsSync() {
   db.exec(`
     CREATE TABLE IF NOT EXISTS official_mit_students (
       roll_no TEXT PRIMARY KEY,
@@ -37,37 +36,47 @@ async function seedAllMitStudents() {
     );
   `);
 
-  const existing = db.prepare('SELECT COUNT(*) as c FROM official_mit_students').get().c;
-  if (existing > 0) {
-    console.log(`[MIT Roster] Table already populated with ${existing} verified students.`);
-    return existing;
-  }
+  try {
+    const existing = db.prepare('SELECT COUNT(*) as c FROM official_mit_students').get().c;
+    if (existing > 0) return existing;
+  } catch (e) {}
 
-  const insert = db.prepare(`
-    INSERT OR REPLACE INTO official_mit_students (roll_no, name, year, semester, degree, department)
-    VALUES (?, ?, ?, ?, ?, ?)
-  `);
-
-  // 1. FAST OFFLINE SEEDING FROM BUNDLED DATASET (Essential for cloud deployment)
   const bundledPath = path.join(__dirname, '..', 'data', 'official_mit_students.json');
   if (fs.existsSync(bundledPath)) {
     try {
-      console.log('[MIT Roster] Bundled roster found! Seeding official MIT students offline...');
+      console.log('[MIT Roster] Bundled roster found! Seeding official MIT students synchronously...');
       const list = JSON.parse(fs.readFileSync(bundledPath, 'utf8'));
+      const insert = db.prepare(`
+        INSERT OR REPLACE INTO official_mit_students (roll_no, name, year, semester, degree, department)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `);
       db.exec('BEGIN');
       for (const s of list) {
         insert.run(s.roll_no, s.name, s.year, s.semester, s.degree, s.department);
       }
       db.exec('COMMIT');
       const loadedCount = db.prepare('SELECT COUNT(*) as c FROM official_mit_students').get().c;
-      console.log(`[MIT Roster] ✓ Successfully seeded ${loadedCount} official MIT students from bundled dataset!`);
+      console.log(`[MIT Roster] ✓ Successfully seeded ${loadedCount} official MIT students synchronously from bundled dataset!`);
       return loadedCount;
     } catch (e) {
-      console.error('[MIT Roster] Error reading bundled dataset, falling back to online fetch:', e.message);
+      console.error('[MIT Roster] Sync seed error:', e.message);
     }
+  }
+  return 0;
+}
+
+async function seedAllMitStudents() {
+  console.log('[MIT Roster] Initializing official_mit_students database table...');
+  const count = seedAllMitStudentsSync();
+  if (count > 0) {
+    return count;
   }
 
   // 2. ONLINE FALLBACK
+  const insert = db.prepare(`
+    INSERT OR REPLACE INTO official_mit_students (roll_no, name, year, semester, degree, department)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `);
   let grandTotal = 0;
   for (const dept of DEPARTMENTS) {
     try {
@@ -108,7 +117,7 @@ async function seedAllMitStudents() {
   return verifiedCount;
 }
 
-module.exports = { seedAllMitStudents };
+module.exports = { seedAllMitStudents, seedAllMitStudentsSync };
 
 if (require.main === module) {
   seedAllMitStudents()

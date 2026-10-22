@@ -134,8 +134,7 @@ function parseCourses(text, department, programme) {
   return semesters;
 }
 
-async function seedAllMitCurricula() {
-  console.log('[MIT Curriculum] Initializing official_curriculum database table...');
+function seedAllMitCurriculaSync() {
   db.exec(`
     CREATE TABLE IF NOT EXISTS official_curriculum (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -155,24 +154,21 @@ async function seedAllMitCurricula() {
     );
   `);
 
-  const existing = db.prepare('SELECT COUNT(*) as c FROM official_curriculum').get().c;
-  if (existing > 0) {
-    console.log(`[MIT Curriculum] Table already populated with ${existing} official courses.`);
-    return existing;
-  }
+  try {
+    const existing = db.prepare('SELECT COUNT(*) as c FROM official_curriculum').get().c;
+    if (existing > 0) return existing;
+  } catch (e) {}
 
-  const insert = db.prepare(`
-    INSERT OR REPLACE INTO official_curriculum
-    (department, programme, semester, course_code, course_name, course_type, lecture_hours, practical_hours, credits, category, syllabus_json)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `);
-
-  // 1. FAST OFFLINE SEEDING FROM BUNDLED DATASET (Guaranteed on cloud deployment)
   const bundledPath = path.join(__dirname, '..', 'data', 'official_curriculum.json');
   if (fs.existsSync(bundledPath)) {
     try {
-      console.log('[MIT Curriculum] Bundled curriculum found! Seeding official MIT courses & syllabi offline...');
+      console.log('[MIT Curriculum] Bundled curriculum found! Seeding official MIT courses & syllabi synchronously...');
       const list = JSON.parse(fs.readFileSync(bundledPath, 'utf8'));
+      const insert = db.prepare(`
+        INSERT OR REPLACE INTO official_curriculum
+        (department, programme, semester, course_code, course_name, course_type, lecture_hours, practical_hours, credits, category, syllabus_json)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
       db.exec('BEGIN');
       for (const c of list) {
         insert.run(
@@ -191,12 +187,27 @@ async function seedAllMitCurricula() {
       }
       db.exec('COMMIT');
       const loadedCount = db.prepare('SELECT COUNT(*) as c FROM official_curriculum').get().c;
-      console.log(`[MIT Curriculum] ✓ Successfully seeded ${loadedCount} official MIT courses from bundled dataset!`);
+      console.log(`[MIT Curriculum] ✓ Successfully seeded ${loadedCount} official MIT courses synchronously from bundled dataset!`);
       return loadedCount;
     } catch (e) {
-      console.error('[MIT Curriculum] Error reading bundled dataset, falling back to PDF parsing:', e.message);
+      console.error('[MIT Curriculum] Sync seed error:', e.message);
     }
   }
+  return 0;
+}
+
+async function seedAllMitCurricula() {
+  console.log('[MIT Curriculum] Initializing official_curriculum database table...');
+  const count = seedAllMitCurriculaSync();
+  if (count > 0) {
+    return count;
+  }
+
+  const insert = db.prepare(`
+    INSERT OR REPLACE INTO official_curriculum
+    (department, programme, semester, course_code, course_name, course_type, lecture_hours, practical_hours, credits, category, syllabus_json)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
 
   let totalCourses = 0;
 
@@ -276,7 +287,7 @@ async function seedAllMitCurricula() {
   return finalCount;
 }
 
-module.exports = { seedAllMitCurricula };
+module.exports = { seedAllMitCurricula, seedAllMitCurriculaSync };
 
 if (require.main === module) {
   seedAllMitCurricula().then(() => process.exit(0)).catch(err => {

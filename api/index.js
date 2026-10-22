@@ -1,6 +1,8 @@
 const app = require('../src/app');
 const { initDatabase } = require('../src/config/db');
-const { seedDatabase } = require('../src/config/seed');
+const { seedDatabase, seedAcademicClock } = require('../src/config/seed');
+const { seedAllMitStudentsSync } = require('../src/config/seed_all_mit_students');
+const { seedAllMitCurriculaSync } = require('../src/config/seed_all_mit_curricula');
 
 let isInitialized = false;
 
@@ -9,9 +11,12 @@ function ensureInitialized() {
     try {
       initDatabase();
       seedDatabase();
+      seedAcademicClock();
+      seedAllMitStudentsSync();
+      seedAllMitCurriculaSync();
       isInitialized = true;
     } catch (err) {
-      console.error('Database initialization error:', err);
+      console.error('Vercel serverless database initialization error:', err);
       throw err;
     }
   }

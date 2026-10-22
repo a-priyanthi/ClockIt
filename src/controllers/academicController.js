@@ -48,6 +48,8 @@ function namesMatch(inputName, officialName) {
   return false;
 }
 
+exports.namesMatch = namesMatch;
+
 // ==========================================
 // 1. Authentication & Official Student Verification
 // ==========================================
@@ -100,11 +102,15 @@ exports.verifyAndLogin = (req, res) => {
     }
 
     // Ensure database table is populated (essential on fresh cloud deployment)
-    const rosterCount = db.prepare('SELECT COUNT(*) as c FROM official_mit_students').get().c;
+    let rosterCount = 0;
+    try {
+      rosterCount = db.prepare('SELECT COUNT(*) as c FROM official_mit_students').get().c;
+    } catch (e) {}
+
     if (rosterCount === 0) {
       try {
-        const { seedAllMitStudents } = require('../config/seed_all_mit_students');
-        seedAllMitStudents();
+        const { seedAllMitStudentsSync } = require('../config/seed_all_mit_students');
+        seedAllMitStudentsSync();
       } catch (e) {
         console.warn('Auto-seed roster notice:', e.message);
       }
@@ -278,11 +284,15 @@ exports.verifyOfficialStudent = (req, res) => {
     }
 
     // Ensure database table is populated
-    const rosterCount = db.prepare('SELECT COUNT(*) as c FROM official_mit_students').get().c;
+    let rosterCount = 0;
+    try {
+      rosterCount = db.prepare('SELECT COUNT(*) as c FROM official_mit_students').get().c;
+    } catch (e) {}
+
     if (rosterCount === 0) {
       try {
-        const { seedAllMitStudents } = require('../config/seed_all_mit_students');
-        seedAllMitStudents();
+        const { seedAllMitStudentsSync } = require('../config/seed_all_mit_students');
+        seedAllMitStudentsSync();
       } catch (e) {
         console.warn('Auto-seed roster notice:', e.message);
       }
