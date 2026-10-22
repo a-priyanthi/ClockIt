@@ -6,7 +6,7 @@
 
 ---
 
-## 🌟 Overview
+##  Overview
 
 **ClockIt** is an academic student workspace and official curriculum verification portal tailored for undergraduate engineering students at the Madras Institute of Technology (MIT Campus), Anna University.
 
@@ -28,7 +28,7 @@ The platform provides:
 
 ---
 
-## ⚡ Tech Stack
+##  Tech Stack
 
 - **Frontend**: Vanilla HTML5, CSS3 (Custom Variables, Retro Typography, CSS Animations), Modern JavaScript (ES6+ Modules, Fetch API).
 - **Backend**: Node.js & Express REST API with MVC Architecture.
@@ -38,7 +38,7 @@ The platform provides:
 
 ---
 
-## 📂 Project Structure
+##  Project Structure
 
 ```
 ClockIt/
@@ -75,7 +75,7 @@ ClockIt/
 
 ---
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### Prerequisites
 
@@ -111,7 +111,7 @@ ClockIt/
 
 ---
 
-## 🚢 Deployment
+##  Deployment
 
 ClockIt is self-contained with no external database servers required:
 
@@ -129,7 +129,7 @@ ClockIt is self-contained with no external database servers required:
 
 ---
 
-## 🏛️ Campus Attribution
+##  Campus Attribution
 
 **Anna University — Madras Institute of Technology (MIT Campus)**  
 Chromepet, Chennai, Tamil Nadu 600044  
