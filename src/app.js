@@ -9,6 +9,14 @@ const app = express();
 
 // Global Middleware
 app.use(cors());
+app.use((req, res, next) => {
+  const orig = req.headers['x-matched-path'] || req.headers['x-forwarded-uri'] || req.headers['x-original-url'];
+  if (orig && (req.url === '/api' || req.url === '/api/index.js' || req.url === '/' || req.url === '/api/index' || req.url.startsWith('/api/index.js?') || req.url.startsWith('/api?'))) {
+    const qIdx = req.url.indexOf('?');
+    req.url = (qIdx !== -1 && !orig.includes('?')) ? orig + req.url.slice(qIdx) : orig;
+  }
+  next();
+});
 app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 
