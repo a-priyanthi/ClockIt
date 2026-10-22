@@ -2,7 +2,7 @@
 
 > **Academic Student Workspace & Verification Platform**  
 > Designed for **Anna University — Madras Institute of Technology (MIT Campus)**  
-> Built with ✦ by **Priyanthi A, Senthalir v, Dhiya R M, Narmatha U A**
+> Official R2023 Academic System
 
 ---
 
@@ -129,11 +129,8 @@ ClockIt is self-contained with no external database servers required:
 
 ---
 
-## 👥 Contributors
+## 🏛️ Campus Attribution
 
-- **Priyanthi A**
-- **Senthalir v**
-- **Dhiya R M**
-- **Narmatha U A**
-
-*Anna University — Madras Institute of Technology (MIT Campus)*
+**Anna University — Madras Institute of Technology (MIT Campus)**  
+Chromepet, Chennai, Tamil Nadu 600044  
+*Autonomous Academic Student Platform*

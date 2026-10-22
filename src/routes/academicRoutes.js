@@ -30,9 +30,10 @@ router.post('/events/:id/register', academicController.toggleEventRegistration);
 router.get('/attendance', academicController.getAttendance);
 router.post('/attendance', academicController.recordAttendance);
 
-// 5. Subjects & Detailed Syllabus (CS23304 Java Programming)
+// 5. Subjects & Detailed Syllabus
 router.get('/subjects', academicController.getSubjects);
 router.get('/subjects/:code', academicController.getSubjectByCode);
+router.get('/subject/:code', academicController.getSubjectByCode);
 router.post('/subjects', academicController.addSubject);
 router.put('/subjects/:code', academicController.updateSubject);
 
