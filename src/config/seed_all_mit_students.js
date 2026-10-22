@@ -1,3 +1,5 @@
+const fs = require('fs');
+const path = require('path');
 const https = require('https');
 const { db } = require('./db');
 
@@ -22,8 +24,8 @@ function fetchDepartmentHtml(url) {
   });
 }
 
-async function seedAllMitStudents() {
-  console.log('[MIT Roster] Creating official_mit_students table...');
+function seedAllMitStudents() {
+  console.log('[MIT Roster] Initializing official_mit_students database table...');
   db.exec(`
     CREATE TABLE IF NOT EXISTS official_mit_students (
       roll_no TEXT PRIMARY KEY,
@@ -46,12 +48,31 @@ async function seedAllMitStudents() {
     VALUES (?, ?, ?, ?, ?, ?)
   `);
 
-  let grandTotal = 0;
+  // 1. FAST OFFLINE SEEDING FROM BUNDLED DATASET (Essential for cloud deployment)
+  const bundledPath = path.join(__dirname, '..', 'data', 'official_mit_students.json');
+  if (fs.existsSync(bundledPath)) {
+    try {
+      console.log('[MIT Roster] Bundled roster found! Seeding official MIT students offline...');
+      const list = JSON.parse(fs.readFileSync(bundledPath, 'utf8'));
+      db.exec('BEGIN');
+      for (const s of list) {
+        insert.run(s.roll_no, s.name, s.year, s.semester, s.degree, s.department);
+      }
+      db.exec('COMMIT');
+      const loadedCount = db.prepare('SELECT COUNT(*) as c FROM official_mit_students').get().c;
+      console.log(`[MIT Roster] ✓ Successfully seeded ${loadedCount} official MIT students from bundled dataset!`);
+      return loadedCount;
+    } catch (e) {
+      console.error('[MIT Roster] Error reading bundled dataset, falling back to online fetch:', e.message);
+    }
+  }
 
+  // 2. ONLINE FALLBACK
+  let grandTotal = 0;
   for (const dept of DEPARTMENTS) {
     try {
       console.log(`[MIT Roster] Fetching ${dept.name} students from ${dept.url}...`);
-      const html = await fetchDepartmentHtml(dept.url);
+      const html = fetchDepartmentHtml(dept.url);
       const regex = /students-item\s+(filter-[a-z]+)[\s\S]*?<h5>(.*?)<\/h5>[\s\S]*?<h6>(\d+)<\/h6>[\s\S]*?<p>(.*?)<\/p>/g;
       let m;
       let count = 0;
@@ -90,8 +111,12 @@ async function seedAllMitStudents() {
 module.exports = { seedAllMitStudents };
 
 if (require.main === module) {
-  seedAllMitStudents().then(() => process.exit(0)).catch(err => {
+  try {
+    const total = seedAllMitStudents();
+    console.log('Seeded total:', total);
+    process.exit(0);
+  } catch (err) {
     console.error(err);
     process.exit(1);
-  });
+  }
 }

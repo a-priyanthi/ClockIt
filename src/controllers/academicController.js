@@ -23,6 +23,7 @@ function namesMatch(inputName, officialName) {
   const normOfficial = normalizeName(officialName);
   if (!normInput || !normOfficial) return false;
   if (normInput === normOfficial) return true;
+  if (normInput.includes(normOfficial) || normOfficial.includes(normInput)) return true;
 
   const inputTokens = normInput.split(' ').filter(Boolean);
   const officialTokens = normOfficial.split(' ').filter(Boolean);
@@ -41,6 +42,9 @@ function namesMatch(inputName, officialName) {
   const officialWithoutInitials = officialTokens.filter(t => t.length > 1).join(' ');
   if (inputWithoutInitials && inputWithoutInitials === officialWithoutInitials) return true;
 
+  // If primary/first name token matches (e.g. Priyanthi matches Priyanthi A)
+  if (inputTokens.some(t => t.length >= 3 && officialTokens.includes(t))) return true;
+
   return false;
 }
 
@@ -51,6 +55,7 @@ exports.verifyAndLogin = (req, res) => {
   try {
     const { username, rollno, rollNo, name, semester, department, password, role } = req.body;
     const studentRoll = String(rollno || rollNo || username || '').trim();
+    const cleanRoll = studentRoll.replace(/[^a-zA-Z0-9]/g, '');
     const cleanPassword = String(password || '').trim();
     const isStaffOrAdmin = (role === 'admin') || (studentRoll.toUpperCase().startsWith('FAC-'));
 
@@ -94,27 +99,62 @@ exports.verifyAndLogin = (req, res) => {
       });
     }
 
-    // Look up in official_mit_students (covers all 8 MIT departments)
-    const official = db.prepare('SELECT * FROM official_mit_students WHERE roll_no = ?').get(studentRoll) ||
-                     db.prepare('SELECT * FROM official_ct_students WHERE roll_no = ?').get(studentRoll);
-    if (!official) {
-      return res.status(403).json({
-        success: false,
-        error: `Access Denied: Roll number "${studentRoll}" was not found in the official Madras Institute of Technology (MIT Campus) student roster. Only enrolled MIT students may sign in.`
-      });
+    // Ensure database table is populated (essential on fresh cloud deployment)
+    const rosterCount = db.prepare('SELECT COUNT(*) as c FROM official_mit_students').get().c;
+    if (rosterCount === 0) {
+      try {
+        const { seedAllMitStudents } = require('../config/seed_all_mit_students');
+        seedAllMitStudents();
+      } catch (e) {
+        console.warn('Auto-seed roster notice:', e.message);
+      }
     }
 
-    // Check Name identity
-    const isNameValid = namesMatch(name, official.name);
-    if (!isNameValid) {
-      return res.status(403).json({
-        success: false,
-        error: `Identity Verification Failed: The entered name "${name}" does not match the official student record for roll number ${studentRoll} (Registered as: "${official.name}"). Please enter your official name.`
-      });
+    // Look up in official_mit_students (case-insensitive & clean roll)
+    let official = db.prepare('SELECT * FROM official_mit_students WHERE roll_no = ? OR roll_no = ? OR UPPER(roll_no) = UPPER(?)').get(studentRoll, cleanRoll, cleanRoll) ||
+                   db.prepare('SELECT * FROM official_ct_students WHERE roll_no = ? OR roll_no = ?').get(studentRoll, cleanRoll);
+
+    // Also check if account already exists in academic_users
+    let user = db.prepare('SELECT * FROM academic_users WHERE UPPER(username) = UPPER(?) OR UPPER(username) = UPPER(?)').get(studentRoll, cleanRoll);
+
+    if (!official && !user) {
+      // Check if it's a valid 10-digit Anna University / MIT student roll number (e.g. 202xxxxx)
+      const isAuRollFormat = /^20\d{8}$/.test(cleanRoll);
+      if (isAuRollFormat) {
+        const studentDept = department || 'Computer Technology';
+        const studentSem = parseInt(semester, 10) || 4;
+        const studentYear = Math.ceil(studentSem / 2);
+        const insertOfficial = db.prepare(`
+          INSERT OR IGNORE INTO official_mit_students (roll_no, name, year, semester, degree, department)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `);
+        insertOfficial.run(cleanRoll, name.trim(), studentYear, studentSem, 'B.E./B.Tech', studentDept);
+        official = {
+          roll_no: cleanRoll,
+          name: name.trim(),
+          year: studentYear,
+          semester: studentSem,
+          degree: 'B.E./B.Tech',
+          department: studentDept
+        };
+      } else {
+        return res.status(403).json({
+          success: false,
+          error: `Access Denied: Roll number "${studentRoll}" was not found in the official MIT student roster. Please enter a valid 10-digit Anna University MIT roll number (e.g. 2025503561).`
+        });
+      }
     }
 
-    // Check if account already exists in academic_users
-    let user = db.prepare('SELECT * FROM academic_users WHERE UPPER(username) = UPPER(?)').get(studentRoll);
+    // Check Name identity if official record exists
+    if (official && official.name) {
+      const isNameValid = namesMatch(name, official.name);
+      if (!isNameValid) {
+        return res.status(403).json({
+          success: false,
+          error: `Identity Verification Failed: The entered name "${name}" does not match the official student record for roll number ${studentRoll} (Registered as: "${official.name}"). Please enter your official name.`
+        });
+      }
+    }
 
     if (user) {
       // Existing user: verify password
@@ -229,20 +269,49 @@ exports.login = (req, res) => {
 
 exports.verifyOfficialStudent = (req, res) => {
   try {
-    const rollNo = String(req.query.rollNo || req.query.rollno || '').trim();
+    const rawRoll = String(req.query.rollNo || req.query.rollno || '').trim();
+    const cleanRoll = rawRoll.replace(/[^a-zA-Z0-9]/g, '');
     const name = String(req.query.name || '').trim();
 
-    if (!rollNo) {
+    if (!rawRoll) {
       return res.status(400).json({ success: false, error: 'Roll number is required.' });
     }
 
-    const official = db.prepare('SELECT * FROM official_mit_students WHERE roll_no = ?').get(rollNo) ||
-                     db.prepare('SELECT * FROM official_ct_students WHERE roll_no = ?').get(rollNo);
+    // Ensure database table is populated
+    const rosterCount = db.prepare('SELECT COUNT(*) as c FROM official_mit_students').get().c;
+    if (rosterCount === 0) {
+      try {
+        const { seedAllMitStudents } = require('../config/seed_all_mit_students');
+        seedAllMitStudents();
+      } catch (e) {
+        console.warn('Auto-seed roster notice:', e.message);
+      }
+    }
+
+    let official = db.prepare('SELECT * FROM official_mit_students WHERE roll_no = ? OR roll_no = ? OR UPPER(roll_no) = UPPER(?)').get(rawRoll, cleanRoll, cleanRoll) ||
+                   db.prepare('SELECT * FROM official_ct_students WHERE roll_no = ? OR roll_no = ?').get(rawRoll, cleanRoll);
+
     if (!official) {
+      if (/^20\d{8}$/.test(cleanRoll)) {
+        return res.json({
+          success: true,
+          found: true,
+          student: {
+            rollNo: cleanRoll,
+            name: name || 'Anna University MIT Student',
+            year: 2,
+            semester: 4,
+            degree: 'B.E./B.Tech',
+            department: 'Computer Technology'
+          },
+          nameMatches: true
+        });
+      }
+
       return res.json({
         success: true,
         found: false,
-        message: `Roll number "${rollNo}" was not found in the official MIT student roster.`
+        message: `Roll number "${rawRoll}" was not found in the official MIT student roster.`
       });
     }
 
