@@ -128,7 +128,7 @@ exports.verifyAndLogin = (req, res) => {
       const isAuRollFormat = /^20\d{8}$/.test(cleanRoll);
       if (isAuRollFormat) {
         const studentDept = department || 'Computer Technology';
-        const studentSem = parseInt(semester, 10) || 4;
+        const studentSem = parseInt(semester, 10) || 3;
         const studentYear = Math.ceil(studentSem / 2);
         const insertOfficial = db.prepare(`
           INSERT OR IGNORE INTO official_mit_students (roll_no, name, year, semester, degree, department)
@@ -310,7 +310,7 @@ exports.verifyOfficialStudent = (req, res) => {
             rollNo: cleanRoll,
             name: name || 'Anna University MIT Student',
             year: 2,
-            semester: 4,
+            semester: 3,
             degree: 'B.E./B.Tech',
             department: 'Computer Technology'
           },

@@ -327,7 +327,7 @@ body.auth-gate .login-wrap {
         <div class="panel">
           <div class="panel-head">
             <h3>Semester metrics</h3>
-            <span class="pill" id="semesterPill">SEM 4</span>
+            <span class="pill" id="semesterPill">SEM 3</span>
           </div>
           <div class="stat-grid">
             <div class="stat">
@@ -716,9 +716,9 @@ body.auth-gate .login-wrap {
                   <select id="loginStudentSemester" name="semester" required>
                     <option value="1">Semester 1</option>
                     <option value="2">Semester 2</option>
-                    <option value="3">Semester 3</option>
+                    <option value="3" selected>Semester 3</option>
                     <option value="4">Semester 4</option>
-                    <option value="5" selected>Semester 5</option>
+                    <option value="5">Semester 5</option>
                     <option value="6">Semester 6</option>
                     <option value="7">Semester 7</option>
                     <option value="8">Semester 8</option>
@@ -859,8 +859,8 @@ let currentUser = {
   name: 'Student',
   role: 'student',
   department: 'Computer Technology',
-  programme: 'B.Tech Information Technology',
-  semester: '4',
+  programme: 'B.E. Computer Science and Engineering',
+  semester: '3',
   avatar: null
 };
 
@@ -1060,9 +1060,9 @@ function updateProfileUI() {
   $('#profileName').value = currentUser.name || '';
   $('#profileRoll').value = currentUser.username || '';
   $('#profileDept').value = currentUser.department || 'Computer Technology';
-  $('#profileProgramme').value = currentUser.programme || 'B.Tech Information Technology';
-  $('#profileSemester').value = currentUser.semester || '4';
-  $('#semesterPill').textContent = `SEM ${currentUser.semester || '4'}`;
+  $('#profileProgramme').value = currentUser.programme || 'B.E. Computer Science and Engineering';
+  $('#profileSemester').value = currentUser.semester || '3';
+  $('#semesterPill').textContent = `SEM ${currentUser.semester || '3'}`;
 
   const deptNote = $('#sidebarDeptNote');
   if (deptNote) {
@@ -2054,8 +2054,8 @@ function handleAuthAction() {
     name: 'Student',
     role: 'student',
     department: 'Computer Technology',
-    programme: 'B.Tech Information Technology',
-    semester: '4',
+    programme: 'B.E. Computer Science and Engineering',
+    semester: '3',
     avatar: null
   };
   marks = [];
@@ -2084,7 +2084,7 @@ if (studentForm) {
     e.preventDefault();
     const name = ($('#loginStudentName')?.value || '').trim();
     const rollNo = ($('#loginStudentRoll')?.value || '').trim();
-    const semester = $('#loginStudentSemester')?.value || '5';
+    const semester = $('#loginStudentSemester')?.value || '3';
     const department = $('#loginStudentDept')?.value || 'Computer Technology';
     const password = $('#loginStudentPassword')?.value || '';
     const submitBtn = $('#btnStudentSubmit');
