@@ -127,6 +127,130 @@ function initDatabase() {
       published_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       replan_reason TEXT
     );
+
+    /* =====================================================================
+       ClockIt Database Schema (Full-Stack Student Workspace)
+       ===================================================================== */
+    CREATE TABLE IF NOT EXISTS academic_users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT UNIQUE NOT NULL,
+      password TEXT NOT NULL,
+      name TEXT NOT NULL,
+      role TEXT DEFAULT 'student',
+      department TEXT DEFAULT 'Computer Technology',
+      programme TEXT DEFAULT 'B.Tech Information Technology',
+      semester TEXT DEFAULT '4',
+      avatar TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS academic_calendar (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER DEFAULT 1,
+      date TEXT NOT NULL,
+      type TEXT NOT NULL,
+      title TEXT NOT NULL,
+      detail TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS academic_events (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      category TEXT NOT NULL,
+      date TEXT NOT NULL,
+      time TEXT NOT NULL,
+      place TEXT NOT NULL,
+      description TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS academic_event_registrations (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      event_id INTEGER NOT NULL,
+      user_id INTEGER NOT NULL,
+      registered_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(event_id, user_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS academic_subjects (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      code TEXT UNIQUE NOT NULL,
+      name TEXT NOT NULL,
+      units INTEGER DEFAULT 5,
+      lecture_hours INTEGER DEFAULT 45,
+      practical_hours INTEGER DEFAULT 60,
+      credits INTEGER DEFAULT 5,
+      progress INTEGER DEFAULT 0,
+      attended INTEGER DEFAULT 0,
+      total INTEGER DEFAULT 0,
+      syllabus_json TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS academic_attendance_logs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER DEFAULT 1,
+      subject_code TEXT NOT NULL,
+      status TEXT NOT NULL,
+      date TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS academic_marks (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER DEFAULT 1,
+      subject TEXT NOT NULL,
+      assessment TEXT NOT NULL,
+      score REAL NOT NULL,
+      outof REAL NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS academic_journal (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER DEFAULT 1,
+      title TEXT NOT NULL,
+      text TEXT NOT NULL,
+      mood TEXT DEFAULT '🙂',
+      date TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS academic_tasks (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER DEFAULT 1,
+      title TEXT NOT NULL,
+      detail TEXT,
+      completed INTEGER DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS official_mit_students (
+      roll_no TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      year INTEGER NOT NULL,
+      semester INTEGER NOT NULL,
+      degree TEXT NOT NULL,
+      department TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS official_curriculum (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      department TEXT NOT NULL,
+      programme TEXT NOT NULL,
+      semester INTEGER NOT NULL,
+      course_code TEXT NOT NULL,
+      course_name TEXT NOT NULL,
+      course_type TEXT,
+      lecture_hours INTEGER DEFAULT 45,
+      practical_hours INTEGER DEFAULT 60,
+      credits INTEGER DEFAULT 3,
+      category TEXT,
+      syllabus_json TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(department, semester, course_code)
+    );
   `);
 
   // Safe schema migrations for existing databases

@@ -9,6 +9,11 @@ node_modules/
 uploads/*
 !uploads/.gitkeep
 
+# Cache & Build
+cache_pdf/
+backend-java/target/
+*.class
+
 # Environment & Logs
 .env
 *.log

@@ -1,156 +1,139 @@
-# Thryve — AI Collaborative Learning Intelligence Full-Stack Platform
+# ClockIt ✦
 
-A full-stack, neo-brutalist web application designed for student engineering teams to make collaborative thinking, discussions, documents, task contributions, and AI-driven insights visible and actionable.
+> **Academic Student Workspace & Verification Platform**  
+> Designed for **Anna University — Madras Institute of Technology (MIT Campus)**  
+> Built with ✦ by **Priyanthi A, Senthalir v, Dhiya R M, Narmatha U A**
 
 ---
 
-## ⚡ Tech Stack & Architecture
+## 🌟 Overview
 
-- **Front-end**: Pure Neo-Brutalist HTML5 / CSS3 / JavaScript (vanilla) with responsive grid layouts, stickers, badges, and modals matching the design specification.
-- **Back-end Server**: Modular Node.js / Express REST API with MVC layered architecture.
-  - **Controllers**: Isolated route logic for Auth, Projects, Sprints, Approvals, Documents, Requests, Chat, AI, and Reports.
-  - **Services**: AI contextual heuristics, sprint optimization, and metrics computation.
-  - **Middleware**: JWT authentication, Multer file upload handling, and centralized error handling.
-  - **Security**: Password hashing with `bcryptjs`, JWT token signing with `jsonwebtoken`, and `.env` configuration with `dotenv`.
-- **Database**: Node.js built-in `node:sqlite` (`DatabaseSync`) — zero external native build dependencies, instant boot, and persistent storage in `thryve.db`.
-- **File Uploads**: `multer` handling real multi-file and folder uploads into the `uploads/` directory with file-download serving.
-- **Intelligence Engine**: Real-time contextual AI analysis generating role assignments, code scaffolds, peer-learning interventions, and deadline risk detection.
+**ClockIt** is an academic student workspace and official curriculum verification portal tailored for undergraduate engineering students at the Madras Institute of Technology (MIT Campus), Anna University.
+
+The platform provides:
+- **Identity Verification Gate**: Secure, roster-verified student sign-in strictly validating against official Anna University MIT Campus UG student rolls (3,790+ registered students across 8 engineering departments).
+- **Official R2023 Curriculum & Syllabi**: Live semester-wise academic courses directly sourced from official Anna University Centre for Academic Courses (`cac.annauniv.edu`) syllabi PDFs for:
+  - Aeronautical Engineering
+  - Automobile Engineering
+  - Computer Science & Engineering (Computer Technology)
+  - Electronics & Communication Engineering
+  - Electronics & Instrumentation Engineering
+  - Information Technology
+  - Production Engineering
+  - Rubber & Plastics Technology
+- **Interactive Academic Clock & Schedule Dial**: A 24-hour circular dial visualizing daily class routines, lab sessions, and study slots.
+- **Academic Tasks & Semester Milestones**: Assessment calendars, semester end exams, paper submissions, and unit test tracking.
+- **Grayscale Photo-to-Doodle Profile Engine**: Handcrafted grayscale illustration filter for student profile pictures.
+- **Aesthetic Retro-Bubble Design System**: Vibrant coral-red (`#ff5454`) backdrop, cream typography, and 11 animated four-pointed starbursts (✦).
+
+---
+
+## ⚡ Tech Stack
+
+- **Frontend**: Vanilla HTML5, CSS3 (Custom Variables, Retro Typography, CSS Animations), Modern JavaScript (ES6+ Modules, Fetch API).
+- **Backend**: Node.js & Express REST API with MVC Architecture.
+- **Database**: Built-in `node:sqlite` (`DatabaseSync`) for zero external native compiler overhead and high reliability.
+- **Security & Auth**: Bcryptjs password hashing, JWT authentication tokens, CORS configuration.
+- **File Ingestion**: Multer for student profile photos and course materials.
 
 ---
 
 ## 📂 Project Structure
 
 ```
-thryve/
+ClockIt/
 ├── public/
-│   └── index.html               # Complete Neo-Brutalist frontend UI & client logic
+│   └── index.html               # Frontend UI, ClockIt retro design & client controllers
 ├── src/
-│   ├── app.js                   # Express application setup, middleware, static files
+│   ├── app.js                   # Express application configuration
 │   ├── config/
-│   │   ├── index.js             # Environment variables & runtime constants
-│   │   ├── db.js                # SQLite connection & schema initialization
-│   │   └── seed.js              # Idempotent demo database seeder
+│   │   ├── index.js             # Environment variables
+│   │   ├── db.js                # SQLite database setup & tables schema
+│   │   ├── seed.js              # Initial database seeder
+│   │   ├── seed_all_mit_curricula.js # Automated PDF parser for official R2023 syllabi
+│   │   ├── seed_all_mit_students.js  # Scraper & seeder for official MIT student rolls
+│   │   ├── seed_official_dates.js    # Anna University academic milestone dates
+│   │   └── seed_official_students.js # Computer Technology student roster
 │   ├── controllers/
-│   │   ├── authController.js    # Team/Member signup, login, profile, password
-│   │   ├── projectController.js # Projects & team member assignments
-│   │   ├── sprintController.js  # Sprints, task toggling, deadline calculations
-│   │   ├── approvalController.js# Approval queue processing & decisions
-│   │   ├── documentController.js# File/folder upload, sharing, downloads
-│   │   ├── requestController.js # Collaboration work & resource requests
-│   │   ├── chatController.js    # Real-time discussion & AI responses
-│   │   ├── aiController.js      # Role suggestions, scaffolds, sprint proposals
-│   │   └── reportController.js  # Team & individual execution metrics
+│   │   ├── academicController.js     # Student verification, curriculum & dates logic
+│   │   ├── authController.js         # User registration & session management
+│   │   ├── sprintController.js       # Academic tasks & milestones
+│   │   └── documentController.js     # Uploads & document handling
 │   ├── middleware/
-│   │   ├── auth.js              # JWT generation, token verification, bcrypt hashing
-│   │   ├── upload.js            # Multer disk storage and limits
-│   │   └── errorHandler.js      # Centralized 404 & exception handler
-│   ├── routes/
-│   │   ├── authRoutes.js
-│   │   ├── projectRoutes.js
-│   │   ├── approvalRoutes.js
-│   │   ├── documentRoutes.js
-│   │   ├── aiRoutes.js
-│   │   ├── reportRoutes.js
-│   │   └── index.js             # Main router aggregator mounted at /api
-│   └── services/
-│       ├── aiIntelligenceService.js # Contextual heuristics & AI recommendations
-│       └── metricsService.js        # Sprint metrics & progress calculations
-├── uploads/                     # Storage folder for uploaded project files
-├── server.js                    # Server entry point
-├── .env.example                 # Environment configuration template
-├── package.json
-└── README.md
+│   │   ├── auth.js              # JWT verification middleware
+│   │   ├── upload.js            # Multer upload handler
+│   │   └── errorHandler.js      # Global error handling
+│   └── routes/
+│       ├── academicRoutes.js    # /api/academic routes
+│       ├── authRoutes.js        # /api/auth routes
+│       └── index.js             # Root API router
+├── uploads/                     # Student avatar & file storage
+├── server.js                    # Application entry point
+├── package.json                 # Dependencies & scripts
+└── .env.example                 # Environment configuration template
 ```
 
 ---
 
-## 🚀 Running the Application
+## 🚀 Getting Started
 
-### 1. Install Dependencies
-```bash
-npm install
-```
+### Prerequisites
 
-### 2. Configure Environment (Optional)
-Copy `.env.example` to `.env`:
-```bash
-cp .env.example .env
-```
+- **Node.js**: `v20.x` or `v22.x` (recommended `v22.x` with built-in SQLite support)
+- **npm**: `v9.x` or higher
 
-### 3. Start Server
-```bash
-npm start
-```
-Or for auto-reloading development mode:
-```bash
-npm run dev
-```
+### Local Installation
 
-The application will launch on:
-```
-http://localhost:3000
-```
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/a-priyanthi/ClockIt.git
+   cd ClockIt
+   ```
 
----
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
 
-## 🔑 Available Default Credentials
+3. **Configure environment variables**:
+   ```bash
+   cp .env.example .env
+   ```
+   *(Defaults in `.env.example` work out of the box for local development)*
 
-- **Team Login**:
-  - Team Email: `studysync@team.demo`
-  - Team ID: `STUDY-01`
-  - Password: `demo1234`
-- **Member Login**:
-  - Priya (Team Lead): `lead@team.demo` / `demo1234`
-  - Arun (Frontend): `arun@team.demo` / `demo1234`
-  - Meena (Data/Analytics): `meena@team.demo` / `demo1234`
-  - Vishal (QA/DevOps): `vishal@team.demo` / `demo1234`
+4. **Start the application**:
+   ```bash
+   npm start
+   ```
+
+5. **Open in browser**:
+   Visit [http://localhost:3000](http://localhost:3000)
 
 ---
 
-## 📡 REST API Endpoints
+## 🚢 Deployment
 
-### Health & Auth
-- `GET /api/health`: Service health check.
-- `POST /api/auth/team-login`: Authenticate team and return active projects.
-- `POST /api/auth/team-signup`: Create new team, team lead, and workspace.
-- `POST /api/auth/member-login`: Authenticate individual team members.
-- `POST /api/auth/user-signup`: Request member account creation (queued for approval).
-- `POST /api/auth/profile`: Update user profile details.
-- `POST /api/auth/change-password`: Update member password.
+ClockIt is self-contained with no external database servers required:
 
-### Projects & Team Setup
-- `GET /api/projects`: List all projects.
-- `POST /api/projects`: Create project with member setups & trigger AI role suggestions.
-- `GET /api/projects/:id/members`: List active team members.
-- `POST /api/projects/:id/members/roles`: Update member role or assign custom work.
+### Deploying to Render
+1. Create a **New Web Service** pointing to this repository.
+2. Build Command: `npm install`
+3. Start Command: `npm start`
+4. Set Environment Variables:
+   - `NODE_ENV`: `production`
+   - `PORT`: `10000` (or leave default assigned by Render)
+   - `JWT_SECRET`: *(A secure random string)*
 
-### Sprint & Task Tracking
-- `GET /api/projects/:id/sprint`: Get live tasks, completion counts, and on-time/late calculations.
-- `POST /api/projects/:id/sprint/toggle-task`: Toggle task completion state and compute on-time/late status.
-- `POST /api/projects/:id/sprint/approve`: Team lead publishing gate.
-- `POST /api/projects/:id/sprint/replan`: AI regenerates sprint with peer sessions based on leader feedback.
+### Deploying to Railway / Fly.io / Heroku
+- The `Procfile` / `npm start` command will automatically initialize the database schema and serve the web application on `process.env.PORT`.
 
-### Approvals Queue
-- `GET /api/approvals`: Retrieve pending requests (signups, deletions, document shares).
-- `POST /api/approvals/:id/decide`: Approve or reject requests with automatic state side effects.
+---
 
-### Documents & File Uploads
-- `GET /api/projects/:id/documents`: List project files and folders.
-- `POST /api/projects/:id/documents/upload`: Multi-file and folder upload.
-- `POST /api/projects/:id/documents/share`: Share document with project.
-- `GET /api/documents/download/:id`: Download or preview uploaded assets.
+## 👥 Contributors
 
-### Collaboration Requests & Inbox
-- `GET /api/projects/:id/requests`: List team collaboration requests.
-- `POST /api/projects/:id/requests`: Send request for code or documents.
-- `POST /api/projects/:id/requests/:id/approve`: Approve request and auto-share asset.
+- **Priyanthi A**
+- **Senthalir v**
+- **Dhiya R M**
+- **Narmatha U A**
 
-### AI Discussions & Intelligence
-- `GET /api/projects/:id/chat`: Retrieve messages filtered by mode (`all`, `team`, `ai`).
-- `POST /api/projects/:id/chat`: Send message; triggers contextual AI interventions.
-- `POST /api/ai/suggest-roles`: AI skillset-to-role matching.
-- `POST /api/ai/placeholder-scaffold`: Generate grounded FastAPI / API code scaffolds.
-- `POST /api/ai/sprint-suggestion`: Recommend sprint adjustments to resolve blockers.
-
-### Dynamic Reports
-- `GET /api/reports`: Real-time report computation comparing estimated vs. actual hours, efficiency percentage, and risk items for team or individual members.
+*Anna University — Madras Institute of Technology (MIT Campus)*

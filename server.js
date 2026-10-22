@@ -1,11 +1,16 @@
 const app = require('./src/app');
 const config = require('./src/config');
 const { initDatabase } = require('./src/config/db');
-const { seedDatabase } = require('./src/config/seed');
+const { seedDatabase, seedAcademicClock } = require('./src/config/seed');
+const { seedAllMitStudents } = require('./src/config/seed_all_mit_students');
+const { seedAllMitCurricula } = require('./src/config/seed_all_mit_curricula');
 
 // Initialize database schema and seed defaults
 initDatabase();
 seedDatabase();
+seedAcademicClock();
+seedAllMitStudents().catch(e => console.error('[MIT Roster Init Error]:', e.message));
+seedAllMitCurricula().catch(e => console.error('[MIT Curricula Init Error]:', e.message));
 
 // Start Express Server
 const server = app.listen(config.PORT, () => {
