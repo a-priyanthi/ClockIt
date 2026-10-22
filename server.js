@@ -18,7 +18,7 @@ seedAllMitCurricula().then(() => extractAllDetailedSyllabi()).catch(e => console
 // Start Express Server
 const server = app.listen(config.PORT, () => {
   console.log(`=================================================`);
-  console.log(`⚡ Thryve Full-Stack Backend Server`);
+  console.log(`⚡ ClockIt Academic Student Workspace Server`);
   console.log(`⚡ URL: http://localhost:${config.PORT}`);
   console.log(`⚡ Environment: ${config.NODE_ENV}`);
   console.log(`⚡ Database: ${config.DB_PATH}`);
